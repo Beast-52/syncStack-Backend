@@ -3,24 +3,31 @@ const userRouter = express.Router();
 const ConnectionRequest = require("../models/connectionRequest");
 const { userAuth } = require("../middlewares/auth");
 const user = require("../models/user");
+const allowedFields = [
+  "firstName",
+  "lastName",
+  "photoUrl",
+  "gender",
+  "skills",
+  "about",
+  "age",
+];
 userRouter.get("/requests/received", userAuth, async (req, res) => {
   try {
     const { user } = req;
-    const connectionRequests = await ConnectionRequest.find({
+    const requestsReceived = await ConnectionRequest.find({
       receiverId: user._id,
       status: "smash",
-    }).populate("senderId", [
-      "firstName",
-      "lastName",
-      "gender",
-      "skills",
-      "photoUrl",
-    ]);
-    res.send(connectionRequests);
+    }).populate("senderId", allowedFields);
+    res.json({
+      message: "fetched all connection requests!🙂",
+      requestsReceived,
+    });
   } catch (error) {
     res.status(400).send(error.message);
   }
 });
+
 userRouter.get("/connections", userAuth, async (req, res) => {
   try {
     const { user } = req;
@@ -30,20 +37,8 @@ userRouter.get("/connections", userAuth, async (req, res) => {
         { senderId: user._id, status: "accepted" },
       ],
     })
-      .populate("senderId", [
-        "firstName",
-        "lastName",
-        "gender",
-        "skills",
-        "photoUrl",
-      ])
-      .populate("receiverId", [
-        "firstName",
-        "lastName",
-        "gender",
-        "skills",
-        "photoUrl",
-      ]);
+      .populate("senderId", allowedFields)
+      .populate("receiverId", allowedFields);
 
     const connections = connectionRequests.map((item) => {
       if (item.receiverId.equals(user._id)) {
@@ -51,7 +46,7 @@ userRouter.get("/connections", userAuth, async (req, res) => {
       }
       return item.receiverId;
     });
-    res.send({
+    res.json({
       message: "fetched all connections!🙂",
       connections,
       totalConnection: connections.length,
@@ -97,10 +92,13 @@ userRouter.get("/feed", userAuth, async (req, res) => {
           },
         ],
       })
-      .select("firstName lastName photoUrl gender skills")
+      .select(allowedFields)
       .skip((page - 1) * limit)
       .limit(limit);
-    res.send(feed);
+    res.json({
+      message: "fetched feed successfully",
+      feed,
+    });
   } catch (error) {
     res.status(400).send(error.message);
   }

@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const userAuth = async (req, res, next) => {
   try {
     const { token } = req.cookies;
-    if (!token) throw new Error("Invalid Tokens");
+    if (!token) return res.status(401).send("Unauthorized - Token Not Found❌");
 
     const { _id } = await jwt.verify(token, "$SyncStack@123");
 

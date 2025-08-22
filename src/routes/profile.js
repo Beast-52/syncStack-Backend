@@ -4,25 +4,28 @@ const User = require("../models/user");
 const profileRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
 const bcrypt = require("bcrypt");
+
+const allowedEditFields = [
+  "firstName",
+  "lastName",
+  "skill",
+  "gender",
+  "photoUrl",
+  "age",
+  "about",
+];
 profileRouter.get("/view", userAuth, async (req, res) => {
   try {
     const { user } = req;
-    res.send(user);
+    res.json({
+      message: "User Found Successfully",
+      user,
+    });
   } catch (error) {
     res.status(400).send(error.message);
   }
 });
 profileRouter.patch("/edit", userAuth, async (req, res) => {
-  const allowedEditFields = [
-    "firstName",
-    "lastName",
-    "email",
-    "skill",
-    "gender",
-    "photoUrl",
-    "age",
-    "about",
-  ];
   try {
     const userUpdate = req.body;
     const isEditAllowed = Object.keys(req.body).every((key) =>
@@ -34,7 +37,10 @@ profileRouter.patch("/edit", userAuth, async (req, res) => {
       new: true,
       runValidators: true,
     });
-    res.send(updatedUser);
+    res.json({
+      message: "User Updated Successfully",
+      updatedUser,
+    });
   } catch (error) {
     res.status(400).send(error.message);
   }
